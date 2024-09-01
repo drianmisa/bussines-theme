@@ -1,6 +1,4 @@
-<?php 
-
-define('template', 1.0);
+<?php
 
 /*-----------------------------------------------------------------------------------*/
 /* FLUSH PERMALINKS 
@@ -39,9 +37,9 @@ add_theme_support('title-tag');
 function mytheme_widgets_init()
 {
 	register_sidebar(array(
-		'name'          => __('Sidebar', 'mytheme'),
+		'name'          => __('Sidebar', 'bussinesAdr'),
 		'id'            => 'sidebar-1',
-		'description'   => __('Add widgets here to appear in your sidebar.', 'mytheme'),
+		'description'   => __('Add widgets here to appear in your sidebar.', 'bussinesAdr'),
 		'before_widget' => '<section id="%1$s" class="widget %2$s">',
 		'after_widget'  => '</section>',
 		'before_title'  => '<h2 class="widget-title">',
@@ -53,20 +51,19 @@ add_action('widgets_init', 'mytheme_widgets_init');
 /*-----------------------------------------------------------------------------------*/
 /* 	Limpieza en WP_HEAD()
 /*-----------------------------------------------------------------------------------*/
-remove_action('wp_head', 'rsd_link'); 
-remove_action('wp_head', 'wlwmanifest_link'); 
-remove_action('wp_head', 'wp_generator');  
-remove_action('wp_head', 'start_post_rel_link'); 
-remove_action('wp_head', 'index_rel_link'); 
-remove_action('wp_head', 'adjacent_posts_rel_link');
-remove_action('wp_head', 'wp_shortlink_wp_head', 10, 0);  
+remove_action('wp_head', 'rsd_link'); //Links for Flickr
+remove_action('wp_head', 'wlwmanifest_link'); //Prints windows live writer xml
+remove_action('wp_head', 'wp_generator');  //Prints WP Version
+remove_action('wp_head', 'start_post_rel_link'); //Prints related links
+remove_action('wp_head', 'index_rel_link'); //Prints related links
+remove_action('wp_head', 'adjacent_posts_rel_link'); //Prints related links
+remove_action('wp_head', 'wp_shortlink_wp_head', 10, 0);    //removes short links
 
 // Remover wp emogi
 remove_action('wp_head', 'print_emoji_detection_script', 7);
 remove_action('wp_print_styles', 'print_emoji_styles');
 remove_action('admin_print_scripts', 'print_emoji_detection_script');
 remove_action('admin_print_styles', 'print_emoji_styles');
-
 //Desabilitar RSS
 function itsme_disable_feed()
 {
@@ -115,8 +112,8 @@ add_theme_support('post-thumbnails');
 /*-----------------------------------------------------------------------------------*/
 register_nav_menus(
 	array(
-		'primary'	=>	__('Primary Menu', 'template'),
-		'secondary' => __('secondary Menu', 'template'),
+		'primary'	=>	__('Primary Menu', 'bussinesAdr'),
+		'secondary' => __('secondary Menu', 'bussinesAdr'),
 	)
 );
 
@@ -124,18 +121,17 @@ register_nav_menus(
 /* Stilos y scripst
 /*-----------------------------------------------------------------------------------*/
 // remover wp version param from any enqueued scripts
-function vc_remove_wp_ver_css_js($src)
-{
+function vc_remove_wp_ver_css_js($src){
 	if (strpos($src, 'ver='))
 		$src = remove_query_arg('ver', $src);
 	return $src;
 }
+
 add_filter('style_loader_src', 'vc_remove_wp_ver_css_js', 9999);
 add_filter('script_loader_src', 'vc_remove_wp_ver_css_js', 9999);
 
 
-function template_scripts()
-{
+function template_scripts(){
 	// Enqueue the theme stylesheet
 	wp_enqueue_style('style', get_stylesheet_uri());
 
@@ -146,104 +142,3 @@ function template_scripts()
 	wp_enqueue_script('app-js', get_stylesheet_directory_uri() . '/src/min-js/app.min.js', array(), null, true);
 }
 add_action('wp_enqueue_scripts', 'template_scripts');
-
-
-
-
-class FLHM_HTML_Compression
-{
-	protected $flhm_compress_css = true;
-	protected $flhm_compress_js = true;
-	protected $flhm_info_comment = true;
-	protected $flhm_remove_comments = true;
-	protected $html;
-	public function __construct($html)
-	{
-		if (!empty($html)) {
-			$this->flhm_parseHTML($html);
-		}
-	}
-	public function __toString()
-	{
-		return $this->html;
-	}
-	protected function flhm_bottomComment($raw, $compressed)
-	{
-		$raw = strlen($raw);
-		$compressed = strlen($compressed);
-		$savings = ($raw - $compressed) / $raw * 100;
-		$savings = round($savings, 2);
-		return '<!--HTML compressed, size saved ' . $savings . '%. From ' . $raw . ' bytes, now ' . $compressed . ' bytes-->';
-	}
-	protected function flhm_minifyHTML($html)
-	{
-		$pattern = '/<(?<script>script).*?<\/script\s*>|<(?<style>style).*?<\/style\s*>|<!(?<comment>--).*?-->|<(?<tag>[\/\w.:-]*)(?:".*?"|\'.*?\'|[^\'">]+)*>|(?<text>((<[^!\/\w.:-])?[^<]*)+)|/si';
-		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
-		$overriding = false;
-		$raw_tag = false;
-		$html = '';
-		foreach ($matches as $token) {
-			$tag = (isset($token['tag'])) ? strtolower($token['tag']) : null;
-			$content = $token[0];
-			if (is_null($tag)) {
-				if (!empty($token['script'])) {
-					$strip = $this->flhm_compress_js;
-				} else if (!empty($token['style'])) {
-					$strip = $this->flhm_compress_css;
-				} else if ($content == '<!--wp-html-compression no compression-->') {
-					$overriding = !$overriding;
-					continue;
-				} else if ($this->flhm_remove_comments) {
-					if (!$overriding && $raw_tag != 'textarea') {
-						$content = preg_replace('/<!--(?!\s*(?:\[if [^\]]+]|<!|>))(?:(?!-->).)*-->/s', '', $content);
-					}
-				}
-			} else {
-				if ($tag == 'pre' || $tag == 'textarea') {
-					$raw_tag = $tag;
-				} else if ($tag == '/pre' || $tag == '/textarea') {
-					$raw_tag = false;
-				} else {
-					if ($raw_tag || $overriding) {
-						$strip = false;
-					} else {
-						$strip = true;
-						$content = preg_replace('/(\s+)(\w++(?<!\baction|\balt|\bcontent|\bsrc)="")/', '$1', $content);
-						$content = str_replace(' />', '/>', $content);
-					}
-				}
-			}
-			if ($strip) {
-				$content = $this->flhm_removeWhiteSpace($content);
-			}
-			$html .= $content;
-		}
-		return $html;
-	}
-	public function flhm_parseHTML($html)
-	{
-		$this->html = $this->flhm_minifyHTML($html);
-		if ($this->flhm_info_comment) {
-			$this->html .= "\n" . $this->flhm_bottomComment($html, $this->html);
-		}
-	}
-	protected function flhm_removeWhiteSpace($str)
-	{
-		$str = str_replace("\t", ' ', $str);
-		$str = str_replace("\n",  '', $str);
-		$str = str_replace("\r",  '', $str);
-		while (stristr($str, '  ')) {
-			$str = str_replace('  ', ' ', $str);
-		}
-		return $str;
-	}
-}
-function flhm_wp_html_compression_finish($html)
-{
-	return new FLHM_HTML_Compression($html);
-}
-function flhm_wp_html_compression_start()
-{
-	ob_start('flhm_wp_html_compression_finish');
-}
-
