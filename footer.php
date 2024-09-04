@@ -2,8 +2,8 @@
 <?php wp_footer(); ?>
 
 <script>
-    let addClassMEnuLI = document.querySelectorAll('.page_item');
-    let addClassMEnua = document.querySelectorAll('.page_item a');
+    let addClassMEnuLI = document.querySelectorAll('.menu-item');
+    let addClassMEnua = document.querySelectorAll('.menu-item a');
     for(let item of addClassMEnuLI){
         item.classList.add('nav-item')
     }
